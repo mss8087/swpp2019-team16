@@ -3,10 +3,11 @@ import styled from 'styled-components';
 import Button from '../../common/Button';
 import Heading from '../../common/Heading';
 import PropTypes from 'prop-types';
-import recognizer from '../../../lib/azure';
 import Checkbox from 'components/common/Checkbox/index';
 import { UserPropsTypes } from '../../../types/user';
 import { GroupPropTypes } from '../../../types/group';
+import SpeechRecognizer from 'lib/azure/index';
+
 
 const RequestCallBlock = styled.div``;
 
@@ -17,31 +18,34 @@ RequestCallSection.propTypes = {
 };
 
 function RequestCallSection({ user, group, onClickRequestCall }) {
-  const [speechToText, setSpeechToText] = useState(false);
+  const [speechRecognizer, setSpeechRecognizer] = useState(null);
   const triggerText = 'Stop';
 
   // TODO: add test case
-  // TODO: refactor speech recognizer -> create SpeechRecognizer class
   const onSTTHandler = useCallback(() => {
-    if (!speechToText) {
-      console.log('Active STT');
-      recognizer.recognized = (r, event) => {
-        console.log('Recognized message: ' + event.result.text);
-        if (event.result.text.includes(triggerText)) {
-          console.log('Triggered message: ' + triggerText);
-          onClickRequestCall({
-            groupId: group.groupId,
-            driverId: user.id,
-          });
+    if ( !speechRecognizer ) {
+      let rec = new SpeechRecognizer();
+      rec.onSpeech(
+        (r, event) => {
+          console.log('Recognized message: ' + event.result.text);
+          if (event.result.text.includes(triggerText)) {
+            console.log('Triggered message: ' + triggerText);
+            onClickRequestCall({
+              groupId: group.groupId,
+              driverId: user.id,
+            });
+          }
         }
-      };
-      recognizer.startContinuousRecognitionAsync();
+      );
+
+      rec.start();
+      setSpeechRecognizer(rec);
+
     } else {
-      console.log('Deactive STT');
-      recognizer.stopContinuousRecognitionAsync();
+      speechRecognizer.stop();
+      setSpeechRecognizer(null);
     }
-    setSpeechToText(!speechToText);
-  }, [group, user, speechToText, onClickRequestCall]);
+  }, [group, user, speechRecognizer, onClickRequestCall]);
 
   return (
     <RequestCallBlock className="requestCallBlock">
@@ -65,7 +69,7 @@ function RequestCallSection({ user, group, onClickRequestCall }) {
           value={'STT Mode'}
           name={'STT'}
           onClick={onSTTHandler}
-          checked={speechToText}
+          checked={speechRecognizer ? true : false}
         />
       </div>
     </RequestCallBlock>

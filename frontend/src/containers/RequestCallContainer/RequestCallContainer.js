@@ -11,7 +11,7 @@ export const GROUP_CREATED_EVENT = 'event.group_created';
 
 function RequestCallContainer({ history }) {
   const dispatch = useDispatch();
-
+  
   const { user, group } = useSelector(({ user, group }) => ({
     user: user.user,
     group: group.group,
@@ -42,6 +42,12 @@ function RequestCallContainer({ history }) {
     }
   }, [dispatch, user]);
 
+  useEffect(() => {
+    if (!user) {
+      history.push('/login');
+    }
+  }, [user, history]);
+
   const onClickRequestCall = useCallback(
     ({ groupId, driverId }) => {
       dispatch(acceptGroup({ groupId, driverId }));
@@ -52,12 +58,7 @@ function RequestCallContainer({ history }) {
     [dispatch, history],
   );
 
-  useEffect(() => {
-    if (!user) {
-      history.push('/login');
-    }
-  }, [user, history]);
-
+  
   if (!group) {
     return <div>Waiting for group to be matched...</div>;
   }

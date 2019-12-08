@@ -1,2 +1,2 @@
-import recognizer from './speech';
-export default recognizer;
+import SpeechRecognizer from './speech';
+export default SpeechRecognizer;
